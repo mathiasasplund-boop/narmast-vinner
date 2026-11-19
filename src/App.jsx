@@ -502,7 +502,6 @@ async function refreshTeam(t=team,g=game) {
     </div>
   );
 })}
-        </div>)}
       </section>
       <section style={card}>
         <h2>Karta – lagens svar</h2>
