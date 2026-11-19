@@ -212,22 +212,53 @@ export default function App() {
     setSaving(false);
   }
 
-  async function refreshHost(gameId=game?.id) {
-    if (!gameId) return;
-    const [{data:g},{data:t},{data:r},{data:gs}] = await Promise.all([
-      supabase.from('games').select('*').eq('id',gameId).single(),
-      supabase.from('teams').select('*').eq('game_id',gameId),
-      supabase.from('rounds').select('*').eq('game_id',gameId).order('round_number'),
-      supabase.from('guesses').select('*, teams(name)').in(
-        'team_id',
-        (teams.length ? teams : []).map(x=>x.id)
-      )
-    ]);
-    if (g) setGame(g);
-    if (t) setTeams(t);
-    if (r) setRounds(r);
-    if (gs) setGuesses(gs);
+  
+async function refreshHost(gameId=game?.id) {
+  if (!gameId) return;
+
+  const [
+    {data:g,error:ge},
+    {data:t,error:te},
+    {data:r,error:re}
+  ] = await Promise.all([
+    supabase.from('games').select('*')
+      .eq('id',gameId).single(),
+    supabase.from('teams').select('*')
+      .eq('game_id',gameId),
+    supabase.from('rounds').select('*')
+      .eq('game_id',gameId)
+      .order('round_number')
+  ]);
+
+  if (ge || te || re) {
+    setError(ge?.message || te?.message || re?.message);
+    return;
   }
+
+  setGame(g);
+  setTeams(t || []);
+  setRounds(r || []);
+
+  const teamIds = (t || []).map(x => x.id);
+
+  if (!teamIds.length) {
+    setGuesses([]);
+    return;
+  }
+
+  const {data:gs,error:se} = await supabase
+    .from('guesses')
+    .select('*, teams(name)')
+    .in('team_id',teamIds);
+
+  if (se) {
+    setError(se.message);
+    return;
+  }
+
+  setGuesses(gs || []);
+}
+
 
   useEffect(() => {
     if (mode!=='host' || !game?.id) return;
