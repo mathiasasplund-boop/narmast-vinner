@@ -1,0 +1,52 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef2f7;
+  color: #172033;
+}
+
+button {
+  transition: background 0.2s, transform 0.15s;
+}
+
+button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+input, textarea {
+  font: inherit;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+}
+
+.leaflet-container {
+  font-family: Arial, sans-serif;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 30px !important;
+  }
+
+  main {
+    padding: 12px !important;
+  }
+
+  button {
+    margin-bottom: 8px;
+  }
+}
