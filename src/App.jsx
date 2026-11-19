@@ -45,45 +45,88 @@ function distance(a,b,c,d) {
   return 6371 * 2 * Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
 
+
 function MapView({ onPick, guesses=[], target=null, selected=null }) {
   const mapRef = useRef(null);
   const instance = useRef(null);
   const markers = useRef([]);
+  const onPickRef = useRef(onPick);
+
+  useEffect(() => {
+    onPickRef.current = onPick;
+  }, [onPick]);
 
   useEffect(() => {
     if (!mapRef.current || instance.current) return;
+
     const map = L.map(mapRef.current).setView([25,10],2);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
       attribution:'© OpenStreetMap contributors',
       maxZoom:18
     }).addTo(map);
-    map.on('click',e => onPick?.(e.latlng.lat,e.latlng.lng));
+
+    map.on('click', e => {
+      onPickRef.current?.(e.latlng.lat,e.latlng.lng);
+    });
+
     instance.current = map;
+
     setTimeout(() => map.invalidateSize(),200);
-    return () => { map.remove(); instance.current=null; };
-  },[]);
+
+    return () => {
+      map.remove();
+      instance.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const map = instance.current;
     if (!map) return;
+
     markers.current.forEach(m => m.remove());
-    markers.current=[];
+    markers.current = [];
+
     if (selected) {
-      markers.current.push(L.marker([selected.lat,selected.lng])
-        .addTo(map).bindPopup('Din gissning').openPopup());
+      markers.current.push(
+        L.marker([selected.lat,selected.lng])
+          .addTo(map)
+          .bindPopup('Din gissning')
+          .openPopup()
+      );
     }
+
     guesses.forEach(g => {
-      markers.current.push(L.circleMarker([g.latitude,g.longitude],{
-        radius:9,color:'#f59e0b',fillColor:'#fbbf24',fillOpacity:1
-      }).addTo(map).bindPopup(g.name || 'Lagets gissning'));
+      markers.current.push(
+        L.circleMarker([g.latitude,g.longitude],{
+          radius:9,
+          color:'#f59e0b',
+          fillColor:'#fbbf24',
+          fillOpacity:1
+        }).addTo(map).bindPopup(g.name || 'Lagets gissning')
+      );
     });
+
     if (target) {
-      markers.current.push(L.marker([target.lat,target.lng])
-        .addTo(map).bindPopup('Rätt svar'));
+      markers.current.push(
+        L.marker([target.lat,target.lng])
+          .addTo(map)
+          .bindPopup('Rätt svar')
+      );
     }
   },[guesses,target,selected]);
 
-  return <div ref={mapRef} style={{height:'min(65vh,560px)',width:'100%',borderRadius:14,zIndex:1}} />;
+  return (
+    <div
+      ref={mapRef}
+      style={{
+        height:'min(65vh,560px)',
+        width:'100%',
+        borderRadius:14,
+        zIndex:1
+      }}
+    />
+  );
 }
 
 export default function App() {
