@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { QRCodeSVG } from 'qrcode.react';
 
 const CITIES = [
   ['Stockholm','Sverige',59.3293,18.0686],
