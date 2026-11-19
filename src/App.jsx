@@ -221,22 +221,69 @@ export default function App() {
     setSaving(false);
   }
 
-  async function refreshTeam(t=team,g=game) {
-    if (!t || !g) return;
-    const [{data:gameData},{data:r},{data:gs}] = await Promise.all([
-      supabase.from('games').select('*').eq('id',g.id).single(),
-      supabase.from('rounds').select('*').eq('game_id',g.id)
-        .order('round_number'),
-      supabase.from('guesses').select('*').eq('team_id',t.id)
-    ]);
-    if (gameData) setGame(gameData);
-    if (r) setRounds(r);
-    if (gs) {
-      const active=gs.find(x=>x.round_id===r?.find(y=>
-        y.round_number===gameData?.current_round)?.id);
-      setGuess(active ? {lat:active.latitude,lng:active.longitude}:null);
-    }
+  
+async function refreshTeam(t=team,g=game) {
+  if (!t || !g) return;
+
+  const {data: gameData,error: gameError} = await supabase
+    .from('games')
+    .select('*')
+    .eq('id',g.id)
+    .single();
+
+  if (gameError) {
+    setError(gameError.message);
+    return;
   }
+
+  if (gameData) setGame(gameData);
+
+  const {data: currentRows,error: roundError} = await supabase
+    .rpc('get_team_current_round',{p_team_id:t.id});
+
+  if (roundError) {
+    setError(roundError.message);
+    return;
+  }
+
+  const current = currentRows?.[0];
+
+  if (!current) {
+    setRounds([]);
+    return;
+  }
+
+  const round = {
+    id:current.round_id,
+    round_number:current.round_number,
+    target_city:current.target_city,
+    target_country:current.target_country,
+    target_lat:current.target_lat,
+    target_lng:current.target_lng
+  };
+
+  setRounds([round]);
+
+  const {data: gs,error: guessError} = await supabase
+    .from('guesses')
+    .select('*')
+    .eq('team_id',t.id)
+    .eq('round_id',current.round_id);
+
+  if (guessError) {
+    setError(guessError.message);
+    return;
+  }
+
+  if (gs?.length) {
+    setGuess({
+      lat:gs[0].latitude,
+      lng:gs[0].longitude
+    });
+  } else {
+    setGuess(null);
+  }
+}
 
   useEffect(() => {
     if (mode!=='team' || !game?.id) return;
