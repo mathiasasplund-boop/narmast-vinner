@@ -474,16 +474,34 @@ async function refreshTeam(t=team,g=game) {
       </section>
       <section style={card}>
         <h2>Lag och QR-länkar</h2>
-        {teams.map(t=><div key={t.id} style={{
-          padding:12,borderBottom:'1px solid #ddd'}}>
-          <strong>{t.name}</strong>
-          <p style={{overflowWrap:'anywhere'}}>
-            {location.origin+location.pathname+'?team='+t.join_code}
-          </p>
-          <button style={button} onClick={()=>
-            navigator.clipboard.writeText(
-              location.origin+location.pathname+'?team='+t.join_code
-            )}>Kopiera laglänk</button>
+        {teams.map(t => {
+  const teamLink =
+    location.origin + location.pathname + '?team=' + t.join_code;
+
+  return (
+    <div key={t.id} style={{
+      padding: 12,
+      borderBottom: '1px solid #ddd'
+    }}>
+      <strong>{t.name}</strong>
+
+      <div style={{marginTop: 12}}>
+        <QRCodeSVG value={teamLink} size={160} />
+      </div>
+
+      <p style={{overflowWrap: 'anywhere'}}>
+        {teamLink}
+      </p>
+
+      <button
+        style={button}
+        onClick={() => navigator.clipboard.writeText(teamLink)}
+      >
+        Kopiera laglänk
+      </button>
+    </div>
+  );
+})}
         </div>)}
       </section>
       <section style={card}>
